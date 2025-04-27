@@ -18,6 +18,7 @@ vllm = "^0.8.4"
 trl = {git = "https://github.com/huggingface/trl.git"}
 peft = "^0.15.2"
 transformers = "^4.51.3"
+jinja2 = "^3.1.6"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^3.6.0"
