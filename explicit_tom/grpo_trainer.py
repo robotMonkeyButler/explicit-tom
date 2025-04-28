@@ -19,13 +19,14 @@ from explicit_tom.data import GRPODataset
 from functools import partial
 from typing import List
 from peft import prepare_model_for_kbit_training
+from explicit_tom.reward_funcs import get_reward_funcs
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["NCCL_P2P_DISABLE"] = "1"
 os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 
-class SotopiaGRPOTrainer:
+class ToMGRPOTrainer:
     def __init__(self, args, accelerator: Accelerator):
         self.args = args
         self.accelerator = accelerator
@@ -35,6 +36,7 @@ class SotopiaGRPOTrainer:
         self._setup_tokenizer()
         self._setup_dataset()
         self._create_quantization_config()
+        self.reward_funcs = get_reward_funcs(self.args)
         self._setup_policy_models()
         self._setup_classification_models()
 
@@ -162,6 +164,8 @@ class SotopiaGRPOTrainer:
             completions = [c + eos for c in completions]
 
             texts = [p + c for p, c in zip(prompts, completions)]
+            import pdb
+            pdb.set_trace()
 
             inputs = self.tokenizer(
                 text=texts,
@@ -213,13 +217,13 @@ class SotopiaGRPOTrainer:
             log_completions=True,
             wandb_log_unique_prompts=True,
         )
+        all_reward_funcs = self.reward_funcs + [self.wrapped_reward]
 
         self.grpo_trainer = GRPOTrainer(
             args=training_args,
             model=self.policy,
-            reward_funcs=self.wrapped_reward,
+            reward_funcs=all_reward_funcs,
             processing_class=self.tokenizer,
-            reward_processing_classes=self.tokenizer,
             train_dataset=self.train_dataset,
             eval_dataset=self.val_dataset,
         )
