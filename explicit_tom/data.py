@@ -5,7 +5,13 @@ import torch
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizer
 
-SYSTEM_PROMPT = """You are a helpful AI Assistant, designed to provided well-reasoned and detailed responses. You FIRST think about the reasoning process as an internal monologue and then provide the user with the answer.  The reasoning process and answer are enclosed within <think> </think> and <answer> </answer> tags, respectively. The answer should be a single float number.
+SYSTEM_PROMPT ="""
+You are a helpful AI social assistant, designed to provide well-reasoned, structured, and detailed responses.
+
+You FIRST think about the reasoning process as an internal monologue. Write your reasoning inside <think>...</think> tags. Then provide your final response inside <answer>...</answer> tags.
+
+The content inside <answer> must be a JSON object that strictly conforms to the output schema provided in the user prompt. 
+
 Please provide your answer in the following format:
 <think>
 ...
@@ -14,6 +20,7 @@ Please provide your answer in the following format:
 ...
 </answer>
 """
+
 
 
 class SFTDataset(Dataset):
