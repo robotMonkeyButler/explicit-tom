@@ -23,7 +23,7 @@ wandb = "^0.19.10"
 bitsandbytes = "^0.45.5"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.6.0"
+pre-commit = "^4.2.0"
 nbmake = "^1.5.0"
 types-setuptools = "^69.0.0.0"
 ruff = "^0.3.0"
