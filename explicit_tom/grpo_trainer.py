@@ -18,12 +18,31 @@ from accelerate import Accelerator
 from explicit_tom.data import GRPODataset
 from functools import partial
 from typing import List
-from peft import prepare_model_for_kbit_training
 from explicit_tom.reward_funcs import get_reward_funcs
+import re
 
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
 os.environ["NCCL_P2P_DISABLE"] = "1"
 os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
+
+def extract_answer_block(text: str) -> str:
+    match = re.search(r"<answer>\s*(.*?)\s*</answer>", text, flags=re.DOTALL)
+    if match:
+        return match.group(1).strip()
+    else:
+        print("[Warning] No <answer> block found, using raw completion")
+        return text.strip()
+
+def clean_prompt(prompt: str) -> str:
+    cut_phrase = "\nPlease only generate a response in the following format:"
+    assistant_tag = "<|im_end|>\n<|im_start|>assistant\n"
+
+    cut_idx = prompt.find(cut_phrase)
+    assistant_idx = prompt.find(assistant_tag)
+
+    if cut_idx != -1 and assistant_idx != -1 and assistant_idx > cut_idx:
+        prompt = prompt[:cut_idx] + prompt[assistant_idx:]
+    return prompt
 
 
 
@@ -109,7 +128,6 @@ class ToMGRPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
-            base_gen_policy = prepare_model_for_kbit_training(base_gen_policy)
             self.policy = PeftModelForCausalLM.from_pretrained(
                 base_gen_policy,
                 self.args.policy_adapter_path,
@@ -121,7 +139,6 @@ class ToMGRPOTrainer:
                 self.args.model_name,
                 torch_dtype="auto",
             )
-            self.policy = prepare_model_for_kbit_training(self.policy)
         self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
         requires_grad_num = 0
@@ -142,7 +159,6 @@ class ToMGRPOTrainer:
                 quantization_config=self.quant_config,
                 device_map=get_kbit_device_map(),
             )
-            base_reward_model = prepare_model_for_kbit_training(base_reward_model)
             self.reward_model = PeftModelForSequenceClassification.from_pretrained(
                 base_reward_model,
                 self.args.reward_adapter_path,
@@ -155,15 +171,17 @@ class ToMGRPOTrainer:
                 torch_dtype="auto",
                 num_labels=1,
             )
-            self.reward_model = prepare_model_for_kbit_training(self.reward_model)
         self.reward_model.config.pad_token_id = self.tokenizer.pad_token_id
 
         def wrapped_reward(
             prompts: list[str], completions: list[str], **kwargs
         ) -> list[float]:
             eos = self.tokenizer.eos_token
+            import pdb
+            pdb.set_trace()
+            prompts = [clean_prompt(p) for p in prompts]
+            completions = [extract_answer_block(c) for c in completions]
             completions = [c + eos for c in completions]
-
             texts = [p + c for p, c in zip(prompts, completions)]
             inputs = self.tokenizer(
                 text=texts,
