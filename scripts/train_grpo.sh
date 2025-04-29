@@ -14,7 +14,7 @@ CUDA_VISIBLE_DEVICES=2 accelerate launch \
   --num_grpo_epochs 2 \
   --num_generations 16 \
   --max_length 512 \
-  --reward_funcs correctness format tag \
+  --reward_funcs format tag \
   --use_lora_train_grpo \
   --output_dir /data/haofeiy2/explicit-tom/checkpoints/grpo/tom_test_0428
 

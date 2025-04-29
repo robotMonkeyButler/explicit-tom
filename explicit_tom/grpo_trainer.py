@@ -161,12 +161,12 @@ class ToMGRPOTrainer:
             prompts: list[str], completions: list[str], **kwargs
         ) -> list[float]:
             eos = self.tokenizer.eos_token
+            import pdb
+            pdb.set_trace()
             completions = [c + eos for c in completions]
 
             texts = [p + c for p, c in zip(prompts, completions)]
-            import pdb
-            pdb.set_trace()
-
+            
             inputs = self.tokenizer(
                 text=texts,
                 return_tensors="pt",

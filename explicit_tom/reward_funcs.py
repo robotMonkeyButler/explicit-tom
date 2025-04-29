@@ -43,31 +43,8 @@ def extract_answer(text: str) -> str:
 def check_calling(completions, **kwargs):
     return [100.0 for _ in completions]
 
-def correctness_reward_fn(
-    prompts: List[str],
-    completions: List[str],
-    ground_truth: List[float],
-    **kwargs
-) -> List[float]:
-    assert isinstance(completions[0], str), f"Expected str but got {type(completions[0])}"
-
-    rewards = []
-    for comp, gt in zip(completions, ground_truth):
-        try:
-            extracted = extract_answer(comp)
-            pred = float(extracted)
-            diff = abs(pred - gt)
-            reward = math.exp(-diff * 10)
-        except Exception as e:
-            print(f"[Warning] Failed to parse completion: {comp} (error: {e})")
-            reward = 0.0
-        rewards.append(reward)
-
-    return rewards
-
 def get_reward_funcs(script_args) -> list[Callable]:
     REWARD_FUNCS_REGISTRY = {
-        "correctness": correctness_reward_fn,
         "format": soft_format_reward_func,
         "tag": tag_count_reward,
         "check_calling": check_calling}
