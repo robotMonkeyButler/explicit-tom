@@ -26,6 +26,7 @@ os.environ["NCCL_P2P_DISABLE"] = "1"
 os.environ["TORCH_DISTRIBUTED_DEBUG"] = "DETAIL"
 
 
+
 class ToMGRPOTrainer:
     def __init__(self, args, accelerator: Accelerator):
         self.args = args
@@ -161,12 +162,9 @@ class ToMGRPOTrainer:
             prompts: list[str], completions: list[str], **kwargs
         ) -> list[float]:
             eos = self.tokenizer.eos_token
-            import pdb
-            pdb.set_trace()
             completions = [c + eos for c in completions]
 
             texts = [p + c for p, c in zip(prompts, completions)]
-            
             inputs = self.tokenizer(
                 text=texts,
                 return_tensors="pt",
