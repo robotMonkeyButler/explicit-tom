@@ -1,7 +1,7 @@
 export VLLM_GPU=0
 export DJANGO_GPU=2
-export VLLM_PORT=6040
-export DJANGO_PORT=6050
+export VLLM_PORT=6010
+export DJANGO_PORT=6020
 export SFT_MODEL_FOLDER_NAME="sft_qwen25_7b_sft_round_1_bc_data_top_2"
 export SFT_MODEL_CKPT_STEP=1500
 export GRPO_MODEL_FOLDER_NAME="grpo_tom_rm_goal_w_relationship_sft_r1"
@@ -21,7 +21,7 @@ export SFT_MODEL_VLLM_API_URL="http://localhost:${VLLM_PORT}/v1/completions"
 
 # Command 1: Launch the VLLM API server with LoRA enabled.
 CUDA_VISIBLE_DEVICES=$VLLM_GPU python -m vllm.entrypoints.openai.api_server \
-    --model /data/models/Qwen2.5-7B-Instruct \
+    --model /mnt/data_from_server1/models/Qwen2.5-7B-Instruct \
     --port "$VLLM_PORT" \
     --chat-template /data/haofeiy2/explicit-tom/evals/qwen2.5-7b.jinja \
     --served-model-name qwen25-7b-instruct \
@@ -30,8 +30,8 @@ CUDA_VISIBLE_DEVICES=$VLLM_GPU python -m vllm.entrypoints.openai.api_server \
 
 # Command 2: Start the Django server with the specified configuration.
 CUDA_VISIBLE_DEVICES=$DJANGO_GPU python /data/haofeiy2/explicit-tom/serves/manage.py start_with_config \
-    --model_path "$GRPO_MODEL_PATH" \
-    --base_model "/data/models/Qwen2.5-7B-Instruct" \
+    --grpo_model_path "$GRPO_MODEL_PATH" \
+    --base_model_path "/mnt/data_from_server1/models/Qwen2.5-7B-Instruct" \
     --template_path "/data/haofeiy2/explicit-tom/evals/qwen2.5-7b.jinja" \
     --port "$DJANGO_PORT" \
     --log_path "/data/haofeiy2/explicit-tom/evals/logs/$GRPO_MODEL_FOLDER_NAME"

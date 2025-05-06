@@ -16,7 +16,7 @@ def chat_completions(request):
         return JsonResponse({"error": "Messages are required."}, status=400)
 
     # Access the globally loaded RejectionSampler instance
-    sampler = apps.get_app_config("sotopia").tom_sampler
+    sampler = apps.get_app_config("sotopia").rejection_sampler
     top_response = sampler.inference(messages, temperature, top_p, max_new_tokens)
 
     if top_response is not None:
