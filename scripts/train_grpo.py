@@ -34,8 +34,8 @@ if __name__ == '__main__':
     parser.add_argument("--reward_funcs", nargs="+", type=str, required=True, help="List of reward function names to use.")
 
     # Adapter parameters
-    parser.add_argument("--policy_adapter_path", type=str, default=None,
-                        help="Path to policy model adapter")
+    # parser.add_argument("--policy_adapter_path", type=str, default=None,
+    #                     help="Path to policy model adapter")
     parser.add_argument("--reward_adapter_path", type=str, default=None,
                         help="Path to reward model adapter")
 
