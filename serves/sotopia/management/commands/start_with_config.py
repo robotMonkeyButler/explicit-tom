@@ -1,64 +1,32 @@
-# sotopia/management/commands/start_with_tomsampler.py
-import os
+# sotopia/management/commands/start_with_config.py
 from django.core.management import execute_from_command_line
 from django.core.management.base import BaseCommand
-from sotopia.apps import ToMSamplerConfig
-from sotopia.models import ToMSampler
+from sotopia.apps import RejectionSamplerConfig
+from sotopia.models import RejectionSampler
+
 
 class Command(BaseCommand):
-    help = 'Launch Django with a custom ToMSampler for GRPO model outputs'
+    help = 'Start the server with custom RejectionSampler configuration'
 
     def add_arguments(self, parser):
-        parser.add_argument(
-            '--model_path',
-            required=True,
-            help='Path to the local GRPO model directory (base + optional LoRA adapter)'
-        )
-        parser.add_argument(
-            '--base_model',
-            required=True,
-            help='HuggingFace tokenizer identifier or local path (often same as model_path)'
-        )
-        parser.add_argument(
-            '--template_path',
-            required=True,
-            help='Filesystem path to the Jinja2 template for prompt formatting'
-        )
-        parser.add_argument(
-            '--log_path',
-            default='raw_outputs.jsonl',
-            help='Path to the JSONL file where raw model outputs will be appended'
-        )
-        parser.add_argument(
-            '--port',
-            type=int,
-            default=8000,
-            help='Port for Django development server'
-        )
+        parser.add_argument('--base_model_path', required=True, type=str, help='Name of the SFT model')
+        parser.add_argument('--grpo_model_path', required=True, type=str, help='VLLM API URL for the SFT model')
+        parser.add_argument('--template_path', required=True, type=str, help='Path to the Reward model')
+        parser.add_argument('--log_path', required=True, type=str, help='Name of the model')
+        parser.add_argument('--port', type=int, default=8000, help='Port number for the Django server')
 
     def handle(self, *args, **options):
-        # Instantiate the ToMSampler with the provided parameters
-
+        # Set up the rejection sampler with the provided config
         config = {
-            "model_path": options['model_path'],
-            "base_model": options['base_model'],
+            "base_model_path": options['base_model_path'],
+            "grpo_model_path": options['grpo_model_path'],
             "template_path": options['template_path'],
             "log_path": options['log_path'],
         }
 
-        # Attach it to the global AppConfig so views and other code can access it:
-        ToMSamplerConfig.tom_sampler = ToMSampler(**config)
+        # # Initialize the rejection_sampler directly
+        RejectionSamplerConfig.rejection_sampler = RejectionSampler(**config)
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"ToMSampler initialized:\n"
-                f"  Model directory: {options['model_path']}\n"
-                f"  Base model: {options['base_model']}\n"
-                f"  Template: {options['template_path']}\n"
-                f"  Raw-output log: {options['log_path']}\n"
-                f"Starting Django server on port {options['port']}..."
-            )
-        )
-
-        # Finally, launch the Django development server
+        # Start the server with the specified port
+        self.stdout.write(f"Starting the Django server on port {options['port']} with custom configuration...")
         execute_from_command_line(["hello", "runserver", "--noreload", f"{options['port']}"])

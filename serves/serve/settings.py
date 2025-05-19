@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    'sotopia.apps.ToMSamplerConfig',
+    'sotopia.apps.RejectionSamplerConfig',
 ]
 
 MIDDLEWARE = [

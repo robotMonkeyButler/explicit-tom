@@ -6,7 +6,6 @@ class SotopiaConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
     name = "sotopia"
 
-class ToMSamplerConfig(AppConfig):
-    default_auto_field = "django.db.models.BigAutoField"
+class RejectionSamplerConfig(AppConfig):
     name = 'sotopia'
-    tom_sampler = None  # Initialized in the custom command
+    rejection_sampler = None  # Initialized in the custom command

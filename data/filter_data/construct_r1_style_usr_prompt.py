@@ -26,4 +26,4 @@ def process_dataset(input_path: str, output_path: str):
 
     print(f"Processed {len(dataset)} samples and saved to {output_path}")
 
-process_dataset("sotopia_pi_round1_qwen_sft_all_with_instruct_string.json", "sotopia_pi_tom_with_r1_prompt.json")
+process_dataset("selfplay_data_qwen25_7b.json", "tom_data_selfplay_qwen25_7b_instruct.json")
