@@ -54,14 +54,7 @@ class RejectionSampler:
             device_map="auto")
         base_model.config.pad_token_id = self.tokenizer.pad_token_id
 
-        # Check and load the adapter if it exists
-        adapter_path = os.path.join(grpo_model_path, 'adapter_model')
-        if os.path.exists(adapter_path + '.safetensors') or os.path.exists(adapter_path + '.bin'):
-            print(f"Loading reward adapter from: {grpo_model_path}")
-            self.grpo_model = PeftModelForCausalLM.from_pretrained(base_model, grpo_model_path)
-        else:
-            print(f"No adapter found at {adapter_path}, using base model for reward")
-            self.grpo_model = base_model
+        self.grpo_model = PeftModelForCausalLM.from_pretrained(base_model, grpo_model_path)
 
         self.grpo_model.eval()  # Set to evaluation mode
         return self.grpo_model.to(self.model_device)
@@ -105,7 +98,7 @@ Do not include any other text outside the <think> and <answer> tags. Follow this
                     attention_mask=inputs.attention_mask,
                     max_new_tokens=max_new_tokens,
                     max_length=4096,
-                    do_sample=False,
+                    do_sample=True,
                     temperature=temperature,
                     top_p=top_p,
                 )
