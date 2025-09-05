@@ -121,24 +121,21 @@ class ToMGRPOTrainer:
         )
 
     def _setup_policy_models(self):
-        if self.args.use_lora_train_grpo:
-            base_gen_policy = AutoModelForCausalLM.from_pretrained(
-                self.args.model_name,
-                torch_dtype="auto",
-                quantization_config=self.quant_config,
-                device_map=get_kbit_device_map(),
-            )
-            self.policy = PeftModelForCausalLM.from_pretrained(
-                base_gen_policy,
-                self.args.policy_adapter_path,
-                is_trainable=True,
-                adapter_name="policy_adapter",
-            )
-        else:
-            self.policy = AutoModelForCausalLM.from_pretrained(
-                self.args.model_name,
-                torch_dtype="auto",
-            )
+        base_gen_policy = AutoModelForCausalLM.from_pretrained(
+            self.args.model_name,
+            quantization_config=self.quant_config,
+            device_map=get_kbit_device_map(),
+            torch_dtype='auto',
+        )
+        lora_config = LoraConfig(
+            r=8,
+            lora_alpha=64,
+            target_modules=["c_attn", "q_proj", "v_proj"],
+            lora_dropout=0.1,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        self.policy = get_peft_model(base_gen_policy, lora_config)
         self.policy.config.pad_token_id = self.tokenizer.pad_token_id
 
         requires_grad_num = 0
@@ -146,7 +143,35 @@ class ToMGRPOTrainer:
             print(name, param.requires_grad)
             if param.requires_grad:
                 requires_grad_num += 1
-        print(f"Number of trainable parameters in policy: {requires_grad_num}")
+        print(f'Number of trainable parameters in policy: {requires_grad_num}')
+
+    # def _setup_policy_models(self):
+    #     if self.args.use_lora_train_grpo:
+    #         base_gen_policy = AutoModelForCausalLM.from_pretrained(
+    #             self.args.model_name,
+    #             torch_dtype="auto",
+    #             quantization_config=self.quant_config,
+    #             device_map=get_kbit_device_map(),
+    #         )
+    #         self.policy = PeftModelForCausalLM.from_pretrained(
+    #             base_gen_policy,
+    #             self.args.policy_adapter_path,
+    #             is_trainable=True,
+    #             adapter_name="policy_adapter",
+    #         )
+    #     else:
+    #         self.policy = AutoModelForCausalLM.from_pretrained(
+    #             self.args.model_name,
+    #             torch_dtype="auto",
+    #         )
+    #     self.policy.config.pad_token_id = self.tokenizer.pad_token_id
+
+    #     requires_grad_num = 0
+    #     for name, param in self.policy.named_parameters():
+    #         print(name, param.requires_grad)
+    #         if param.requires_grad:
+    #             requires_grad_num += 1
+    #     print(f"Number of trainable parameters in policy: {requires_grad_num}")
 
     def _setup_classification_models(self):
 
@@ -178,7 +203,6 @@ class ToMGRPOTrainer:
         ) -> list[float]:
             eos = self.tokenizer.eos_token
             import pdb
-            pdb.set_trace()
             prompts = [clean_prompt(p) for p in prompts]
             completions = [extract_answer_block(c) for c in completions]
             completions = [c + eos for c in completions]
@@ -218,6 +242,7 @@ class ToMGRPOTrainer:
         )
 
         training_args = GRPOConfig(
+            max_completion_length=512,
             disable_dropout=True,
             max_prompt_length=4096,
             logging_steps=1,

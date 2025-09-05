@@ -15,21 +15,21 @@ def soft_format_reward_func(completions, **kwargs) -> List[float]:
     return [10.0 if match else 0.0 for match in matches]
 
 def count_tags(text: str) -> float:
-        count = 0.0
-        if text.count("<think>") == 1:
-            count += 2.5
-        if text.count("</think>") == 1:
-            count += 2.5
-        if text.count("<answer>") == 1:
-            count += 2.5
-        if text.count("</answer>") == 1:
-            count += 2.5
-        after_answer = text.split("</answer>")[-1].strip()
+    count = 0.0
+    if text.count("<think>") == 1:
+        count += 2.5
+    if text.count("</think>") == 1:
+        count += 2.5
+    if text.count("<answer>") == 1:
+        count += 2.5
+    if text.count("</answer>") == 1:
+        count += 2.5
+    after_answer = text.split("</answer>")[-1].strip()
 
-        if after_answer:
-            count -= len(after_answer) * 0.01
+    if after_answer:
+        count -= len(after_answer) * 0.01
 
-        return count
+    return count
 
 def tag_count_reward(completions, **kwargs) -> List[float]:
     assert isinstance(completions[0], str), f"Expected str but got {type(completions[0])}"
